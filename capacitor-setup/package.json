@@ -1,0 +1,18 @@
+{
+  "name": "lumon-app-capacitor-setup",
+  "version": "1.0.0",
+  "description": "Setup package for Capacitor APK creation",
+  "main": "index.js",
+  "scripts": {
+    "init": "cap init \"Lumon Industries\" \"com.lumonindustries.app\"",
+    "add-android": "cap add android",
+    "sync": "cap sync",
+    "open-android": "cap open android",
+    "build-android": "cd android && ./gradlew assembleDebug"
+  },
+  "dependencies": {
+    "@capacitor/core": "^6.2.1",
+    "@capacitor/cli": "^6.2.1",
+    "@capacitor/android": "^6.2.1"
+  }
+}
