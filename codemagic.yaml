@@ -1,5 +1,26 @@
 workflows:
-    sample-workflow:
-        name: Codemagic Sample Workflow
-        max_build_duration: 120
-        instance_type: mac_mini_m2
+  android-native:
+    name: Android Native Build
+    environment:
+      vars:
+        GRADLE_TASK: "assembleRelease" # Default task (APK)
+        # GRADLE_TASK: "bundleRelease" # For AAB
+      groups:
+        - android_signing # (Optional) For signing
+    triggering:
+      events:
+        - push
+      branch_patterns:
+        - pattern: "main"
+          include: true
+    scripts:
+      - name: Build Android app
+        script: |
+          ./gradlew $GRADLE_TASK
+    artifacts:
+      - app/build/outputs/apk/release/*.apk # For APK
+      # - app/build/outputs/bundle/release/*.aab # For AAB
+    publishing:
+      email:
+        recipients:
+          - felixwprim@gmail.com 
