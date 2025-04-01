@@ -1,71 +1,60 @@
-import { pgTable, text, serial, integer, doublePrecision, json, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, json, timestamp } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
-// Define the user table
-export const users = pgTable("users", {
+// Define the departments
+export const departmentEnum = z.enum([
+  "MACRODATA_REFINEMENT",
+  "OPTICS_AND_DESIGN",
+  "MIND_SECURITY",
+  "DATA_CONTROL",
+  "UNASSIGNED"
+]);
+
+// Define the employee table
+export const employees = pgTable("employees", {
   id: serial("id").primaryKey(),
-  username: text("username").notNull().unique(),
-  password: text("password").notNull(),
+  name: text("name").notNull(),
+  code: text("code").notNull().unique(),
+  department: text("department").notNull().default("UNASSIGNED"),
+  job: text("job").notNull().default(""),
+  isAdmin: integer("is_admin").notNull().default(0),
 });
 
-export const insertUserSchema = createInsertSchema(users).pick({
-  username: true,
-  password: true,
+export const insertEmployeeSchema = createInsertSchema(employees).pick({
+  name: true,
+  code: true,
+  department: true,
+  job: true,
+  isAdmin: true,
 });
 
-// Define the game saves table
-export const gameSaves = pgTable("game_saves", {
-  id: serial("id").primaryKey(),
-  userId: integer("user_id").references(() => users.id),
-  gameState: json("game_state").notNull(),
-  lastSaved: timestamp("last_saved").notNull().defaultNow(),
+export const updateEmployeeSchema = createInsertSchema(employees).pick({
+  name: true,
+  code: true,
+  department: true,
+  job: true,
+  isAdmin: true,
 });
 
-export const insertGameSaveSchema = createInsertSchema(gameSaves).pick({
-  userId: true,
-  gameState: true,
+// Schema for validation
+export const employeeSchema = z.object({
+  id: z.number().optional(),
+  name: z.string().min(1, "Name is required"),
+  code: z.string().min(5, "Code must be 5 digits").max(5, "Code must be 5 digits").regex(/^\d+$/, "Code must contain only digits"),
+  department: departmentEnum,
+  job: z.string(),
+  isAdmin: z.number().default(0),
 });
 
-// Game state schema for validation
-export const resourceSchema = z.object({
-  amount: z.number(),
-  perSecond: z.number(),
-  lastUpdated: z.number(),
-});
-
-export const upgradeSchema = z.object({
-  id: z.number(),
-  name: z.string(),
-  description: z.string(),
-  cost: z.number(),
-  level: z.number(),
-  baseEffect: z.number(),
-  multiplier: z.number(),
-  unlocked: z.boolean(),
-});
-
-export const statsSchema = z.object({
-  totalResourcesEarned: z.number(),
-  totalUpgradesPurchased: z.number(),
-  totalTimePlayed: z.number(),
-  lastPlayedTimestamp: z.number().optional(),
-});
-
-export const gameStateSchema = z.object({
-  resources: resourceSchema,
-  upgrades: z.array(upgradeSchema),
-  stats: statsSchema,
+export const adminCredentialsSchema = z.object({
+  name: z.string().min(1, "Name is required"),
+  code: z.string().min(5, "Code must be 5 digits").max(5, "Code must be 5 digits").regex(/^\d+$/, "Code must contain only digits"),
 });
 
 // Types
-export type InsertUser = z.infer<typeof insertUserSchema>;
-export type User = typeof users.$inferSelect;
-
-export type InsertGameSave = z.infer<typeof insertGameSaveSchema>;
-export type GameSave = typeof gameSaves.$inferSelect;
-
-export type Resource = z.infer<typeof resourceSchema>;
-export type Upgrade = z.infer<typeof upgradeSchema>;
-export type Stats = z.infer<typeof statsSchema>;
-export type GameState = z.infer<typeof gameStateSchema>;
+export type InsertEmployee = z.infer<typeof insertEmployeeSchema>;
+export type UpdateEmployee = z.infer<typeof updateEmployeeSchema>;
+export type Employee = typeof employees.$inferSelect;
+export type Department = z.infer<typeof departmentEnum>;
+export type AdminCredentials = z.infer<typeof adminCredentialsSchema>;

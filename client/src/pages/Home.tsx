@@ -14,7 +14,7 @@ export default function Home() {
   const { toast } = useToast();
 
   // Handle form submission
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     // Clear previous errors
@@ -31,17 +31,33 @@ export default function Home() {
       return;
     }
     
-    // Check for the specific credentials you want to allow
-    if (name.toLowerCase() === "felix" && code === "00000") {
-      // Store the login in session
-      sessionStorage.setItem("severanceLogin", JSON.stringify({ name, code }));
+    try {
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, code })
+      });
+
+      if (!response.ok) {
+        toast({
+          title: "Access Denied",
+          description: "The information you provided is not recognized.",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      const data = await response.json();
+      
+      // Store the employee data in session storage
+      sessionStorage.setItem("severanceEmployee", JSON.stringify(data));
       
       // Navigate to the work page
       navigate("/work");
-    } else {
+    } catch (error) {
       toast({
-        title: "Access Denied",
-        description: "The information you provided is not recognized.",
+        title: "System Error",
+        description: "An error occurred during authentication. Please try again.",
         variant: "destructive"
       });
     }
