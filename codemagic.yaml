@@ -1,12 +1,12 @@
 workflows:
-  android-native:
-    name: Android Native Build
+  lumon-android:
+    name: Lumon Android Build
     environment:
       vars:
-        GRADLE_TASK: "assembleRelease" # Default task (APK)
-        # GRADLE_TASK: "bundleRelease" # For AAB
+        GRADLE_TASK: "assembleRelease"  # For APK
+        # GRADLE_TASK: "bundleRelease"  # For AAB (App Bundle)
       groups:
-        - android_signing # (Optional) For signing
+        - android_signing  # Only if signing is needed (set up in Codemagic UI)
     triggering:
       events:
         - push
@@ -14,13 +14,43 @@ workflows:
         - pattern: "main"
           include: true
     scripts:
-      - name: Build Android app
+      # Install JDK (Codemagic provides Java 11 by default)
+      - name: Set up JDK
+        script: |
+          sudo apt-get update -y
+          sudo apt-get install -y openjdk-17-jdk
+          export JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
+
+      # Optional: Code signing setup (uncomment if needed)
+      # - name: Set up signing
+      #   script: |
+      #     echo $CM_KEYSTORE | base64 --decode > /tmp/keystore.keystore
+      #     cat >> "$FCI_BUILD_DIR/gradle.properties" <<EOF
+      #     MYAPP_RELEASE_STORE_FILE=/tmp/keystore.keystore
+      #     MYAPP_RELEASE_KEY_ALIAS=$CM_KEY_ALIAS
+      #     MYAPP_RELEASE_STORE_PASSWORD=$CM_KEYSTORE_PASSWORD
+      #     MYAPP_RELEASE_KEY_PASSWORD=$CM_KEY_PASSWORD
+      #     EOF
+
+      # Build the app
+      - name: Build APK/AAB
         script: |
           ./gradlew $GRADLE_TASK
+
     artifacts:
-      - app/build/outputs/apk/release/*.apk # For APK
-      # - app/build/outputs/bundle/release/*.aab # For AAB
+      # APK path (adjust if using a different module name)
+      - app/build/outputs/apk/release/*.apk
+      # AAB path (uncomment if needed)
+      # - app/build/outputs/bundle/release/*.aab
+
     publishing:
       email:
         recipients:
-          - felixwprim@gmail.com 
+          - felixwprim@gmail.com.com  # Replace with your email
+      # Uncomment to publish to Firebase/Google Play
+      # firebase:
+      #   app_id: "1:1234567890:android:abcdef123456"
+      #   groups: ["testers"]
+      # google_play:
+      #   credentials: $GCLOUD_SERVICE_ACCOUNT_CREDENTIALS
+      #   track: internal
