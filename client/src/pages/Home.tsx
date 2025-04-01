@@ -1,83 +1,121 @@
-import { Link } from "wouter";
+import { useEffect, useState } from "react";
+import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Sparkles, Play, Settings, Info } from "lucide-react";
-import { useState, useEffect } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { useToast } from "@/hooks/use-toast";
 
 export default function Home() {
-  const [hasSavedGame, setHasSavedGame] = useState(false);
-  
-  useEffect(() => {
-    // Check if there's a saved game in local storage
-    const savedGameState = localStorage.getItem('gameState');
-    setHasSavedGame(!!savedGameState);
-  }, []);
+  const [name, setName] = useState("");
+  const [code, setCode] = useState("");
+  const [error, setError] = useState("");
+  const [, navigate] = useLocation();
+  const { toast } = useToast();
+
+  // Handle form submission
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    // Clear previous errors
+    setError("");
+    
+    // Validate the form
+    if (!name.trim()) {
+      setError("Please enter your name.");
+      return;
+    }
+    
+    if (!code.trim() || code.length !== 5 || !/^\d+$/.test(code)) {
+      setError("Please enter a valid 5-digit code.");
+      return;
+    }
+    
+    // Check for the specific credentials you want to allow
+    if (name.toLowerCase() === "felix" && code === "00000") {
+      // Store the login in session
+      sessionStorage.setItem("severanceLogin", JSON.stringify({ name, code }));
+      
+      // Navigate to the work page
+      navigate("/work");
+    } else {
+      toast({
+        title: "Access Denied",
+        description: "The information you provided is not recognized.",
+        variant: "destructive"
+      });
+    }
+  };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-purple-50 to-purple-100 flex flex-col items-center justify-center p-4">
+    <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center p-4">
       <div className="w-full max-w-md">
-        <Card className="w-full shadow-lg border-t-4 border-t-primary">
-          <CardHeader className="text-center">
-            <div className="flex justify-center mb-2">
-              <Sparkles className="h-12 w-12 text-primary animate-pulse" />
-            </div>
-            <CardTitle className="text-3xl font-bold text-primary">Idle Resource Empire</CardTitle>
-            <CardDescription>Build your resource empire with just a tap!</CardDescription>
+        <Card className="w-full border-0 bg-black text-white">
+          <CardHeader className="text-center space-y-6 pb-2">
+            <svg
+              className="h-16 w-16 mx-auto"
+              viewBox="0 0 100 100"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <circle cx="50" cy="50" r="45" stroke="white" strokeWidth="2" />
+              <path
+                d="M30 50H70"
+                stroke="white"
+                strokeWidth="2"
+                strokeLinecap="round"
+              />
+            </svg>
+            <CardTitle className="text-2xl font-light tracking-widest">LUMON INDUSTRIES</CardTitle>
           </CardHeader>
           
-          <CardContent className="space-y-6">
-            <div className="flex flex-col gap-4">
-              <Link href="/game">
-                <Button 
-                  className="w-full h-14 text-lg font-semibold flex items-center justify-center gap-2" 
-                  size="lg"
-                >
-                  {hasSavedGame ? (
-                    <>
-                      <Play className="h-5 w-5" /> Continue Game
-                    </>
-                  ) : (
-                    <>
-                      <Play className="h-5 w-5" /> New Game
-                    </>
-                  )}
-                </Button>
-              </Link>
+          <CardContent className="space-y-8 pt-8">
+            <form onSubmit={handleSubmit} className="space-y-8">
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="name" className="text-white font-light uppercase tracking-widest">Name</Label>
+                  <Input
+                    id="name"
+                    type="text"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    className="bg-black text-white border-white focus:border-green-400 h-12"
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="code" className="text-white font-light uppercase tracking-widest">5-Digit Code</Label>
+                  <Input
+                    id="code"
+                    type="text"
+                    maxLength={5}
+                    value={code}
+                    onChange={(e) => setCode(e.target.value.replace(/[^0-9]/g, ''))}
+                    className="bg-black text-white border-white focus:border-green-400 h-12"
+                  />
+                </div>
+              </div>
               
-              {hasSavedGame && (
-                <Button 
-                  variant="outline" 
-                  className="w-full h-12"
-                  onClick={() => {
-                    if (confirm("Are you sure you want to start a new game? Your current progress will be lost.")) {
-                      localStorage.removeItem('gameState');
-                      window.location.href = '/game';
-                    }
-                  }}
-                >
-                  Start New Game
-                </Button>
+              {error && (
+                <div className="text-red-400 text-sm">
+                  {error}
+                </div>
               )}
-            </div>
+              
+              <Button
+                type="submit"
+                className="w-full h-12 bg-black hover:bg-gray-900 text-white border border-white hover:border-green-400 uppercase tracking-widest font-light"
+              >
+                Sign In
+              </Button>
+            </form>
             
-            <div className="grid grid-cols-2 gap-3 mt-4">
-              <Button variant="secondary">
-                <Settings className="h-5 w-5 mr-2" /> Settings
-              </Button>
-              <Button variant="secondary">
-                <Info className="h-5 w-5 mr-2" /> How to Play
-              </Button>
+            <div className="text-xs text-center text-gray-400 mt-8">
+              <p>Authorized Personnel Only</p>
+              <p className="mt-2">© Lumon Industries, Inc.</p>
             </div>
           </CardContent>
-          
-          <CardFooter className="text-xs text-center text-muted-foreground flex justify-center">
-            <p>Tap to generate resources, upgrade to earn more!</p>
-          </CardFooter>
         </Card>
-        
-        <div className="mt-4 text-center text-xs text-muted-foreground">
-          <p>v1.0.0 • Made with ❤️</p>
-        </div>
       </div>
     </div>
   );

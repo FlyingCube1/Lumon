@@ -8,6 +8,33 @@
   }
 
   body {
-    @apply font-sans antialiased bg-background text-foreground;
+    @apply font-sans antialiased bg-black text-white;
+  }
+
+  html {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  ::selection {
+    @apply bg-green-400/30 text-white;
+  }
+}
+
+/* Severance specific styles */
+@layer components {
+  .lumon-card {
+    @apply bg-black border border-gray-800 rounded-sm;
+  }
+
+  .lumon-input {
+    @apply bg-black text-white border-white focus:border-green-400;
+  }
+
+  .lumon-button {
+    @apply bg-black hover:bg-gray-900 text-white border border-white hover:border-green-400 uppercase tracking-widest font-light;
+  }
+
+  .lumon-header {
+    @apply uppercase tracking-widest font-light;
   }
 }
